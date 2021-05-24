@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"name": "Mailbox Alarm",
+			"path": "Mailbox Alarm"
+		},
+		{
+			"path": "ESP Blink Test"
+		}
+	],
+	"settings": {
+		"files.associations": {
+			"random": "cpp"
+		}
+	}
+}
