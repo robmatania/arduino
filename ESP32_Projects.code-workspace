@@ -3,6 +3,10 @@
 		{
 			"name": "ESP32-Projects",
 			"path": "."
+		},
+		{
+			"name": "PuzzleBox",
+			"path": "..\\..\\PlatformIO\\Projects\\PuzzleBox"
 		}
 	],
 	"settings": {
