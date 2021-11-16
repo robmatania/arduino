@@ -7,6 +7,10 @@
 		{
 			"name": "PuzzleBox",
 			"path": "PuzzleBox"
+		},
+		{
+			"name": "ESP Blink Test",
+			"path": "ESP Blink Test"
 		}
 	],
 	"settings": {
