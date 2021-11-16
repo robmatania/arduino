@@ -8,8 +8,8 @@
 			"path": "ESP Blink Test"
 		},
 		{
-			"name": "Puzzle Box",
-			"path": "..\\..\\PlatformIO\\Projects\\Puzzle Box"
+			"name": "PuzzleBox",
+			"path": "..\\..\\PlatformIO\\Projects\\PuzzleBox"
 		}
 	],
 	"settings": {
