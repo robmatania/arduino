@@ -6,6 +6,10 @@
 		},
 		{
 			"path": "ESP Blink Test"
+		},
+		{
+			"name": "ESP32-Projects",
+			"path": "."
 		}
 	],
 	"settings": {
