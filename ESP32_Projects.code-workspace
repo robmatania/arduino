@@ -11,6 +11,10 @@
 		{
 			"name": "ESP Blink Test",
 			"path": "..\\..\\PlatformIO\\Projects\\ESP Blink Test"
+		},
+		{
+			"name": "dd",
+			"path": "..\\..\\PlatformIO\\Projects\\dd"
 		}
 	],
 	"settings": {
