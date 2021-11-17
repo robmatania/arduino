@@ -1,7 +1,7 @@
 #include <Arduino.h>
 
 /*
-  Blinkit
+  Blinkithh
 
   Turns an LED on for one second, then off for one second, repeatedly.
 
