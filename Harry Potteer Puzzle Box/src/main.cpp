@@ -15,8 +15,8 @@ void setup() {
 void loop(){
   
    sensorValue = analogRead(hallSensorPin);
-   delay (100);
-  Serial.println(sensorValue);
+   delay (1);
+  //Serial.println(sensorValue);
 
   if (sensorValue > 600) {        
     digitalWrite(ledPin, HIGH);  
