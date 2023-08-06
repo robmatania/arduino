@@ -1,18 +1,27 @@
 #include <Arduino.h>
 
-// put function declarations here
-int myFunction(int, int);
+int hallSensorPin = A0;     
+int ledPin =  13;    
+int state = 0; 
+long sensorValue;
 
 void setup() {
-  // put your setup code here, to run once:
-  int result = myFunction(2, 3);
+  Serial.begin(9600);
+  
+  pinMode(ledPin, OUTPUT);      
+  pinMode(hallSensorPin, INPUT_PULLUP);     
 }
 
-void loop() {
-  // put your main code here, to run repeatedly:
-}
+void loop(){
+  
+   sensorValue = analogRead(hallSensorPin);
+   delay (100);
+  Serial.println(sensorValue);
 
-// put function definitions here:
-int myFunction(int x, int y) {
-  return x + y;
+  if (sensorValue > 600) {        
+    digitalWrite(ledPin, HIGH);  
+  } 
+  else {
+    digitalWrite(ledPin, LOW); 
+  }
 }
