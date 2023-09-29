@@ -2,7 +2,7 @@
 
 //int hallSensorPin = A0;     
 int hallSensorPin = 2;     
-
+int fetOpPin = 3;
 int ledPin =  13;    
 int state = 0; 
 long sensorValue;
@@ -13,6 +13,7 @@ void setup() {
   
   pinMode(ledPin, OUTPUT);      
   pinMode(hallSensorPin, INPUT_PULLUP);     
+  pinMode(fetOpPin,OUTPUT);
 }
 
 void loop(){
@@ -30,11 +31,22 @@ void loop(){
     digitalWrite(ledPin, LOW); 
   }
   **/
+ 
  sVal = digitalRead(hallSensorPin);
  if (sVal) {        
     digitalWrite(ledPin, HIGH);  
+    digitalWrite(fetOpPin, LOW); 
   } 
   else {
     digitalWrite(ledPin, LOW); 
+    digitalWrite(fetOpPin, HIGH); 
   }
+ 
+
+/*
+ digitalWrite(fetOpPin, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);                       // wait for a second
+  digitalWrite(fetOpPin, LOW);    // turn the LED off by making the voltage LOW
+  delay(1000);                       // wait for a second
+  */
 }
