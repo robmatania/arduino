@@ -14,6 +14,14 @@ void setup() {
   pinMode(ledPin, OUTPUT);      
   pinMode(hallSensorPin, INPUT_PULLUP);     
   pinMode(fetOpPin,OUTPUT);
+
+for (int i=0; i<3; i++)
+  {
+  digitalWrite(fetOpPin, HIGH);   // turn the LED on (HIGH is the voltage level)
+  delay(1000);                       // wait for a second
+  digitalWrite(fetOpPin, LOW);    // turn the LED off by making the voltage LOW
+  delay(1000);                       // wait for a second
+  }
 }
 
 void loop(){
