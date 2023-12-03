@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
-//int hallSensorPin = A0;     
+//int hallSensorPin = A0;  
+   
 int hallSensorPin = 2;     
 int fetOpPin = 3;
 int ledPin =  13;    
