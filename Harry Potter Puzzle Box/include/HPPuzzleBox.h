@@ -9,3 +9,12 @@
 #define PUCK_2 A10
 #define PUCK_3 A11
 #define PUCK_4 A12
+
+#define HELP_LED 8
+#define HELP_BTN 10
+#define MP3_BUSY 11
+
+#define LATCH_2 32
+#define LATCH_3 33
+#define LATCH_4 34
+#define LATCH_5 35
