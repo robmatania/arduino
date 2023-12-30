@@ -21,7 +21,8 @@ Date: 2023
 
 enum puzzleStates {                         // Define enumerated type for state machine states
   NONE,
-  IDLE, 
+  INIT,
+  STATE_0, // Lid Closed
   STATE_1, 
   STATE_2, 
   STATE_3,
@@ -34,11 +35,39 @@ enum puzzleStates {                         // Define enumerated type for state 
 byte savedState;
 puzzleStates lastState, currentState;
 
+
+void init() {
+
+// If entering the state, do initialization stuff
+  if (currentState != lastState) {         
+    lastState = currentState;
+
+  savedState = EEPROM.read(EPROM_STATE_ADDRESS);
+
+  if (savedState == 0xFF)
+    savedState = NONE;
+  
+/*
+  currentState = puzzleStates(savedState);
+  lastState = NONE;
+*/  
+   
+  }
+
+// Perform state tasks
+
+// Check for state transitions
+
+// If leaving the state, do clean up stuff
+ if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
+    
+  }
+}
 // -------------------------------------------------------------------------------------
 // Initial Game state.
 // Lid closed, all traps closed.
 
-void idle() {
+void state_0() {
 // If entering the state, do initialization stuff
   if (currentState != lastState) {         
     lastState = currentState;
@@ -165,29 +194,27 @@ void state_6() {
 void setup() {
   
   Serial.begin(9600);
-  
-  savedState = EEPROM.read(EPROM_STATE_ADDRESS);
 
-  if (savedState == 0xFF)
-    savedState = IDLE;
-  currentState = puzzleStates(savedState);
+  currentState = INIT;
   lastState = NONE;
-
+  
+  
    Serial.print(F("Version: "));
    Serial.println(VERSION);
-
-
-  
   
 }
 
 void loop(){
   switch (currentState) {
-    
+
     case NONE:
       break;
 
-    case IDLE:
+    case INIT:
+      init();
+      break;
+
+    case STATE_0:
       idle();
       break;
 
