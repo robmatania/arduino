@@ -1,3 +1,7 @@
+#define MIN_VOLUME 10
+#define MED_VOLUME 15
+#define MAX_VOLUME 30
+
 #define GEMLED_G 5
 #define GEMLED_R 4
 #define GEM_1 50

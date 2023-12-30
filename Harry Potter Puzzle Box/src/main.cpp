@@ -41,9 +41,21 @@ int helpBtn;
 DY::Player player(&Serial2);
 
 //--------------------------------------------------------------------------------------
-void mp3BusyInterruptHandler(void){
-  mp3Busy = digitalRead(MP3_BUSY);
- //digitalWrite(GEMLED_R, !mp3Busy);
+int readMp3State(void){
+  int mp3State = digitalRead(MP3_BUSY);
+  return mp3State;
+}
+// -------------------------------------------------------------------------------------
+void stopMp3Play(void){
+
+
+}
+// -------------------------------------------------------------------------------------
+void startMp3Play(int index,int vol)
+{
+  player.setVolume(vol); 
+  player.playSpecified(index);
+  Serial.println("Start Playing");
 }
 // -------------------------------------------------------------------------------------
 
@@ -85,28 +97,33 @@ void state_init() {
   }
 }
 // -------------------------------------------------------------------------------------
-// Initial Game state.
-//  All traps closed.
 
 void state_0() {
+// Initial Game state.
+// Play generic
+// All traps closed but don't know if trap 1 is open (padlock).
+// Monitor cogs for trap_2 trigger and then move to state_1 
+// Monitor pucks and play sound when detected
+
+
 // If entering the state, do initialization stuff
   if (currentState != lastState) {     
     EEPROM.write(EPROM_STATE_ADDRESS,currentState);   
-    
+
     Serial.print(F("Enter State: "));
     Serial.println(0);
     lastState = currentState;
 
-    player.begin();
-    player.setVolume(30); // 100% Volume
-    Serial.println("Start Playing");
-    player.playSpecified(1);
- 
+   
+    startMp3Play(1,30);
   }
 
 // Perform state tasks
-
 // Check for state transitions
+    mp3Busy = readMp3State();
+    Serial.print(F("mp3 State: "));
+    Serial.println(mp3Busy);
+
 
 // If leaving the state, do clean up stuff
  if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
@@ -235,7 +252,11 @@ void setup() {
   
    Serial.print(F("Version: "));
    Serial.println(VERSION);
-   helpBtn = digitalRead(HELP_BTN);
+   helpBtn = digitalRead(HELP_BTN);    
+   
+   player.begin();
+
+
   
 }
 
