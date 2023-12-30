@@ -38,32 +38,13 @@ byte savedState;
 puzzleStates lastState, currentState;
 int mp3Busy = 1; // 0=playing; 1=not playing, 
 int helpBtn;
-byte puck_1_State = 0;
-byte puck_2_State = 0;
-byte puck_3_State = 0;
-byte puck_4_State = 0;
 
-byte newPuckStates = 0;
+byte newPuckStates;
 byte lastPuckStates = 0;
 
 
 DY::Player player(&Serial2);
 
-//--------------------------------------------------------------------------------------
-byte readPuckStates(void){
-  byte puckState,tmpPuckState;
-
-  tmpPuckState = digitalRead(PUCK_1);
-  puckState = tmpPuckState;
-  tmpPuckState = digitalRead(PUCK_2);
-  puckState = puckState | tmpPuckState << 1;
-  tmpPuckState = digitalRead(PUCK_3);
-  puckState = puckState | tmpPuckState << 2;
-  tmpPuckState = digitalRead(PUCK_4);
-  puckState = puckState | tmpPuckState << 3;
-
-  return puckState;
-  }
 
 //--------------------------------------------------------------------------------------
 int readMp3State(void){
@@ -84,6 +65,31 @@ void startMp3Play(int index,int vol)
    // Serial.println("Start Playing");
   }
 }
+//--------------------------------------------------------------------------------------
+byte readPuckStates(bool playSound){
+  byte tmpPuckState;
+
+  tmpPuckState = digitalRead(PUCK_1);
+  newPuckStates = tmpPuckState;
+  tmpPuckState = digitalRead(PUCK_2);
+  newPuckStates = newPuckStates | tmpPuckState << 1;
+  tmpPuckState = digitalRead(PUCK_3);
+  newPuckStates= newPuckStates | tmpPuckState << 2;
+  tmpPuckState = digitalRead(PUCK_4);
+  newPuckStates = newPuckStates | tmpPuckState << 3;
+
+  if (newPuckStates < lastPuckStates){
+    Serial.print(lastPuckStates);  
+    Serial.print(" ");  
+    Serial.println(newPuckStates);  
+    if (playSound)
+      startMp3Play(2,DEFAULT_VOLUME);
+  }
+  lastPuckStates = newPuckStates;
+
+  return newPuckStates;
+  }
+
 // -------------------------------------------------------------------------------------
 
 void state_init() {
@@ -142,7 +148,7 @@ void state_0() {
     lastState = currentState;
 
    
-    startMp3Play(2,DEFAULT_VOLUME);
+    startMp3Play(1,DEFAULT_VOLUME);
   }
 
 // Perform state tasks
@@ -152,20 +158,10 @@ void state_0() {
 Serial.print(F("mp3 State: "));
 Serial.println(mp3Busy);
 #endif
-  newPuckStates = readPuckStates();
-  if (newPuckStates < lastPuckStates){
-    Serial.print(lastPuckStates);  
-    Serial.print(" ");  
-    Serial.println(newPuckStates);  
-    startMp3Play(2,DEFAULT_VOLUME);
-  }
-  lastPuckStates = newPuckStates;
+
+readPuckStates(true);
   
-//Serial.print(F("Puck States: "));
-
-
-
-// If leaving the state, do clean up stuff
+  // If leaving the state, do clean up stuff
  if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
     
   }
