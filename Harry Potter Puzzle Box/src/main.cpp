@@ -215,7 +215,7 @@ void loop(){
       break;
 
     case STATE_0:
-      idle();
+      state_0();
       break;
 
     case STATE_1:
