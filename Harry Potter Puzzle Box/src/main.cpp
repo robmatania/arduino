@@ -6,12 +6,17 @@ Date: 2023
 
 */
 #include <Arduino.h>
-#include "EEPROM.h"
+#include <EEPROM.h>
+#include <Servo.h>
+#include <PCF8574.h>
+#include <DYPlayerArduino.h>
+#include <Ticker.h>
+#include <HPPuzzleBox.h>
 
 #define DEBUG true
 
 #define VERSION 0.1
-#define STATE_ADDRESS 0
+#define EPROM_STATE_ADDRESS 0
 
 
 enum puzzleStates {                         // Define enumerated type for state machine states
@@ -28,6 +33,10 @@ enum puzzleStates {                         // Define enumerated type for state 
 
 byte savedState;
 puzzleStates lastState, currentState;
+
+// -------------------------------------------------------------------------------------
+// Initial Game state.
+// Lid closed, all traps closed.
 
 void idle() {
 // If entering the state, do initialization stuff
@@ -46,51 +55,127 @@ void idle() {
   }
 
 }
-
-
+// -------------------------------------------------------------------------------------
 void state_1() {
 
-}
+// If entering the state, do initialization stuff
+  if (currentState != lastState) {         
+    lastState = currentState;
+   
+  }
 
+// Perform state tasks
+
+// Check for state transitions
+
+// If leaving the state, do clean up stuff
+ if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
+    
+  }
+}
+// -------------------------------------------------------------------------------------
 void state_2() {
+// If entering the state, do initialization stuff
+  if (currentState != lastState) {         
+    lastState = currentState;
+   
+  }
 
+// Perform state tasks
+
+// Check for state transitions
+
+// If leaving the state, do clean up stuff
+ if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
+    
+  }
 }
-
+// -------------------------------------------------------------------------------------
 void state_3() {
+// If entering the state, do initialization stuff
+  if (currentState != lastState) {         
+    lastState = currentState;
+   
+  }
 
+// Perform state tasks
+
+// Check for state transitions
+
+// If leaving the state, do clean up stuff
+ if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
+    
+  }
 }
-
+// -------------------------------------------------------------------------------------
 void state_4() {
+// If entering the state, do initialization stuff
+  if (currentState != lastState) {         
+    lastState = currentState;
+   
+  }
 
+// Perform state tasks
+
+// Check for state transitions
+
+// If leaving the state, do clean up stuff
+ if (currentState != lastState) {         
+    
+  }
 }
-
+// -------------------------------------------------------------------------------------
 void state_5() {
+// If entering the state, do initialization stuff
+  if (currentState != lastState) {         
+    lastState = currentState;
+   
+  }
 
+// Perform state tasks
+
+// Check for state transitions
+
+// If leaving the state, do clean up stuff
+ if (currentState != lastState) {        
+
+  }
 }
-
+// -------------------------------------------------------------------------------------
 void state_6() {
+// If entering the state, do initialization stuff
+  if (currentState != lastState) {         
+    lastState = currentState;
+   
+  }
 
+// Perform state tasks
+
+// Check for state transitions
+
+// If leaving the state, do clean up stuff
+ if (currentState != lastState) {       
+    
+  }
 }
 
 
-
-
+// -------------------------------------------------------------------------------------
 
 void setup() {
   
   Serial.begin(9600);
   
-  savedState = EEPROM.read(STATE_ADDRESS);
+  savedState = EEPROM.read(EPROM_STATE_ADDRESS);
 
   if (savedState == 0xFF)
     savedState = IDLE;
   currentState = puzzleStates(savedState);
   lastState = NONE;
 
-  #ifdef DEBUG
    Serial.print(F("Version: "));
    Serial.println(VERSION);
-  #endif
+
 
   
   
