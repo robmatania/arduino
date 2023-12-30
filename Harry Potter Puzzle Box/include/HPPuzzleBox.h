@@ -19,6 +19,11 @@
 #define LATCH_4 34
 #define LATCH_5 35
 
+#define TRAP_2 36
+#define TRAP_3 37
+#define TRAP_4 38
+#define TRAP_5 39
+
 #define SPELL_LED_1 A6
 #define SPELL_LED_2 46
 #define SPELL_LED_3 44
@@ -31,3 +36,7 @@
 #define SPELL_LED_10 47
 
 int spellLeds[10] = {SPELL_LED_1 ,SPELL_LED_2,SPELL_LED_3,SPELL_LED_4,SPELL_LED_5,SPELL_LED_6,SPELL_LED_7,SPELL_LED_8,SPELL_LED_9,SPELL_LED_10};
+
+#define DRAGON_TUBE A4
+#define DRAGON_SPELL_LED A5
+#define LID_CONTACT 12
