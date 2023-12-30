@@ -10,6 +10,7 @@ Date: 2023
 #include <Servo.h>
 #include <PCF8574.h>
 #include <DYPlayerArduino.h>
+#include <PinChangeInterrupt.h>
 #include <Ticker.h>
 #include <HPPuzzleBox.h>
 
@@ -34,27 +35,47 @@ enum puzzleStates {                         // Define enumerated type for state 
 
 byte savedState;
 puzzleStates lastState, currentState;
+int mp3Busy = 1; // 0=playing; 1=not playing, 
+int helpBtn;
 
+DY::Player player(&Serial2);
 
-void init() {
+//--------------------------------------------------------------------------------------
+void mp3BusyInterruptHandler(void){
+  mp3Busy = digitalRead(MP3_BUSY);
+ //digitalWrite(GEMLED_R, !mp3Busy);
+}
+// -------------------------------------------------------------------------------------
+
+void state_init() {
 
 // If entering the state, do initialization stuff
-  if (currentState != lastState) {         
+  if (currentState != lastState) {     
+    Serial.print(F("Enter State: "));
+    Serial.println("INIT");    
+
     lastState = currentState;
 
+
+  if (helpBtn == 0) {
+    EEPROM.write(EPROM_STATE_ADDRESS,0xFF);
+    Serial.println("Resetting EEPROM"); 
+  }
   savedState = EEPROM.read(EPROM_STATE_ADDRESS);
+  Serial.print(F("Saved State: "));
+  Serial.println(savedState); 
 
   if (savedState == 0xFF)
-    savedState = NONE;
+    savedState = STATE_0; // First time
   
-/*
   currentState = puzzleStates(savedState);
-  lastState = NONE;
-*/  
-   
+  Serial.print(F("Current State: "));
+  Serial.println(currentState); 
+     
   }
 
 // Perform state tasks
+// Neve gets here
 
 // Check for state transitions
 
@@ -65,13 +86,22 @@ void init() {
 }
 // -------------------------------------------------------------------------------------
 // Initial Game state.
-// Lid closed, all traps closed.
+//  All traps closed.
 
 void state_0() {
 // If entering the state, do initialization stuff
-  if (currentState != lastState) {         
+  if (currentState != lastState) {     
+    EEPROM.write(EPROM_STATE_ADDRESS,currentState);   
+    
+    Serial.print(F("Enter State: "));
+    Serial.println(0);
     lastState = currentState;
-   
+
+    player.begin();
+    player.setVolume(30); // 100% Volume
+    Serial.println("Start Playing");
+    player.playSpecified(1);
+ 
   }
 
 // Perform state tasks
@@ -195,23 +225,32 @@ void setup() {
   
   Serial.begin(9600);
 
+  pinMode(MP3_BUSY, INPUT_PULLUP);
+  pinMode(HELP_BTN,INPUT_PULLUP);
+    
+
   currentState = INIT;
   lastState = NONE;
   
   
    Serial.print(F("Version: "));
    Serial.println(VERSION);
+   helpBtn = digitalRead(HELP_BTN);
   
 }
 
 void loop(){
+
+  mp3Busy = digitalRead(MP3_BUSY);
+  
+
   switch (currentState) {
 
     case NONE:
       break;
 
     case INIT:
-      init();
+      state_init();
       break;
 
     case STATE_0:
