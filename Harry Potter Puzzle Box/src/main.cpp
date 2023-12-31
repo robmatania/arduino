@@ -98,7 +98,7 @@ void startMp3Play(int index,int vol)
   }
 }
 //--------------------------------------------------------------------------------------
-byte readPuckStates(bool playSound){
+byte (bool playSound){
   byte tmpPuckState;
 
   tmpPuckState = digitalRead(PUCK_1);
@@ -483,6 +483,11 @@ else {
 }
 // -------------------------------------------------------------------------------------
 void state_3() {
+  // Dragon spell puzzle
+  // Winning condition is when dragon tube is inserted un trap_5
+  // Winning condition is true, play a sound and change to state_4 to activate spell detection.
+
+
 // If entering the state, do initialization stuff
   if (currentState != lastState) {         
     Serial.print(F("Enter State: "));
@@ -492,6 +497,14 @@ void state_3() {
   }
 
 // Perform state tasks
+int gt = analogRead(DRAGON_TUBE);
+//Serial.println(gt);
+delay(500);
+if (gt > 15){
+    digitalWrite(DRAGON_SPELL_LED,HIGH);
+}
+
+
 
 // Check for state transitions
 
@@ -571,7 +584,9 @@ void setup() {
   pinMode(GEM_3,INPUT_PULLUP);
   pinMode(GEM_4,INPUT_PULLUP);
 
+  pinMode(DRAGON_TUBE, INPUT);
   
+  pinMode(DRAGON_SPELL_LED,OUTPUT);
   pinMode(GEMLED_G,OUTPUT);
   pinMode(GEMLED_R,OUTPUT);
 
@@ -629,6 +644,7 @@ void setup() {
     while(1);
   }
   
+  digitalWrite(DRAGON_SPELL_LED,LOW);
 }
 
 void loop(){
@@ -638,13 +654,13 @@ void loop(){
 
   if (managePcfInterrupt_0) {
     managePcfInterrupt_0 = false;
-    Serial.println("PCF_0: ");
+  //  Serial.println("PCF_0: ");
     di_0 = pcf8574_0.digitalReadAll();
   }
   
   if (managePcfInterrupt_1) {
     managePcfInterrupt_1 = false;
-    Serial.println("PCF_1: ");
+  //  Serial.println("PCF_1: ");
     di_1 = pcf8574_1.digitalReadAll();
   }
 
