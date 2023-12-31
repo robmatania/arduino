@@ -61,8 +61,9 @@ byte lastCogStates = 0;
 
 int lidState;
 
-int gemSequence = 0;
+byte gemSequence = 0;
 bool gemPresent = false;
+byte gemState = 0;
 
 
 
@@ -127,8 +128,109 @@ byte readCogStates(bool playSound){
   return newCogStates;
 }
 // -------------------------------------------------------------------------------------
+ 
+ byte readGemState(bool playSound){
+
+  byte newGemState = digitalRead(GEM_1);
+
+  byte tmpGem = digitalRead(GEM_2);
+  newGemState = newGemState | tmpGem << 1;
+  tmpGem = digitalRead(GEM_3);
+  newGemState = newGemState | tmpGem << 2;
+  tmpGem = digitalRead(GEM_4);
+  newGemState = newGemState | tmpGem << 3;
+/*
+  Serial.print("Gem State: ");
+  Serial.println(gemState);
+  Serial.print("Gem Sequence: ");
+  Serial.println(gemSequence);
+  delay(1000);
+*/
+  switch (newGemState) {
+
+    case 15: // Gem Absent
+      digitalWrite(GEMLED_R,LOW);
+      digitalWrite(GEMLED_G,LOW);
+      gemPresent = false;
+      break;
+    
+    case 7: // Right
+      if (gemPresent == false){
+        gemPresent = true;
+        if (gemSequence == 3){
+          digitalWrite(GEMLED_R,LOW);
+          digitalWrite(GEMLED_G,HIGH);
+          gemSequence = 4;
+        }
+        else {
+          digitalWrite(GEMLED_G,LOW);
+          digitalWrite(GEMLED_R,HIGH);
+          gemSequence = 0;
+        }
+      }
+      break;
+        
+
+    case 11: // Down
+      if (gemPresent == false){
+        gemPresent = true;
+        if (gemSequence == 1){
+          digitalWrite(GEMLED_R,LOW);
+          digitalWrite(GEMLED_G,HIGH);
+          gemSequence = 2;
+        }
+        else{
+          digitalWrite(GEMLED_G,LOW);
+          digitalWrite(GEMLED_R,HIGH);
+          gemSequence = 0;
+        }
+      }
+      break;
+
+    case 13: // Left
+      if (gemPresent == false){
+        gemPresent = true;
+        if (gemSequence == 0){
+          digitalWrite(GEMLED_R,LOW);
+          digitalWrite(GEMLED_G,HIGH);
+          gemSequence = 1;
+        }
+        else {
+          digitalWrite(GEMLED_G,LOW);
+          digitalWrite(GEMLED_R,HIGH);
+          gemSequence = 0;
+        }
+      }
+      break;
+
+    case 14: // Up
+      if (gemPresent == false){
+        gemPresent = true;
+        if (gemSequence == 2){
+          digitalWrite(GEMLED_R,LOW);
+          digitalWrite(GEMLED_G,HIGH);
+          gemSequence = 3;
+      }
+      else {
+        digitalWrite(GEMLED_G,LOW);
+        digitalWrite(GEMLED_R,HIGH);
+        gemSequence = 0;
+      }
+      }
+      break;
+
+      default:
+        Serial.println("ERROR, Unknown Gem State");
+        break;
+      }
+   
+    return gemSequence;
+  }
+
+// -------------------------------------------------------------------------------------
 void openLatch(int latchPin)
 {
+  Serial.print("OPEN LATCH");
   digitalWrite(latchPin, HIGH);
   delay(200);
   digitalWrite(latchPin, LOW);
@@ -252,111 +354,11 @@ void state_1() {
 
 /********** Perform state tasks *********/
 // Check for state transitions
-
-  byte gemState = digitalRead(GEM_1);
-
-  byte tmpGem = digitalRead(GEM_2);
-  gemState = gemState | tmpGem << 1;
-  tmpGem = digitalRead(GEM_3);
-  gemState = gemState | tmpGem << 2;
-  tmpGem = digitalRead(GEM_4);
-  gemState = gemState | tmpGem << 3;
-
-  Serial.print("Gem State: ");
-  Serial.println(gemState);
-  Serial.print("Gem Sequence: ");
-  Serial.println(gemSequence);
-  delay(1000);
-  
-  switch (gemState) {
-
-    case 15: // Gem Absent
-      digitalWrite(GEMLED_R,LOW);
-      digitalWrite(GEMLED_G,LOW);
-      gemPresent = false;
-      break;
-    
-    case 7: // Right
-      if (gemPresent == false){
-        gemPresent = true;
-        if (gemSequence == 3){
-          digitalWrite(GEMLED_R,LOW);
-          digitalWrite(GEMLED_G,HIGH);
-          gemSequence = 4;
-        }
-        else {
-          digitalWrite(GEMLED_G,LOW);
-          digitalWrite(GEMLED_R,HIGH);
-          gemSequence = 0;
-        }
-      }
-      break;
-        
-
-    case 11: // Down
-      if (gemPresent == false){
-        gemPresent = true;
-        if (gemSequence == 1){
-          digitalWrite(GEMLED_R,LOW);
-          digitalWrite(GEMLED_G,HIGH);
-          gemSequence = 2;
-        }
-        else{
-          digitalWrite(GEMLED_G,LOW);
-          digitalWrite(GEMLED_R,HIGH);
-          gemSequence = 0;
-        }
-      }
-      break;
-
-    case 13: // Left
-      if (gemPresent == false){
-        gemPresent = true;
-        if (gemSequence == 0){
-          digitalWrite(GEMLED_R,LOW);
-          digitalWrite(GEMLED_G,HIGH);
-          gemSequence = 1;
-        }
-        else {
-          digitalWrite(GEMLED_G,LOW);
-          digitalWrite(GEMLED_R,HIGH);
-          gemSequence = 0;
-        }
-      }
-      break;
-
-    case 14: // Up
-      if (gemPresent == false){
-        gemPresent = true;
-        if (gemSequence == 2){
-          digitalWrite(GEMLED_R,LOW);
-          digitalWrite(GEMLED_G,HIGH);
-          gemSequence = 3;
-      }
-      else {
-        digitalWrite(GEMLED_G,LOW);
-        digitalWrite(GEMLED_R,HIGH);
-        gemSequence = 0;
-      }
-      }
-      break;
-
-      default:
-        Serial.println("ERROR, Unknown Gem State");
-        break;
-      }
-  if (gemSequence == 4){
-    currentState = STATE_2; // Change State
-    digitalWrite(GEMLED_R,HIGH);
-    delay(1000);
-    digitalWrite(GEMLED_R,LOW);
-    delay(1000);
-    digitalWrite(GEMLED_G,HIGH);
-    delay(1000);
-    digitalWrite(GEMLED_G,LOW);
-    delay(1000);
-  }
-
+gemState = readGemState(false);
+if (gemState == 4) {
+  openLatch(LATCH_3);
+  currentState = STATE_2; // Gem sequence completed. Open TRAP_3
+}
 /********** If leaving the state, do clean up stuff  *********/
  if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
     
