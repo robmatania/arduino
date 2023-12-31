@@ -68,6 +68,7 @@ byte gemState = 0;
 
 byte symbolCombi = 0;
 byte di_0_lastByte = 0;
+byte combiTry = 0;
 
 
 DY::Player player(&Serial2);
@@ -137,6 +138,7 @@ void symbolCombinaison(bool playSound){
   di_0_byte = di_0.p0<<7 | di_0.p1<<6  | di_0.p2<<5 | di_0.p3<<4 | di_0.p4<<3 | di_0.p5<<2 | di_0.p6<<1| di_0.p7;
   if ((di_0_byte != 0) && (di_0_byte != 0xFF) && (di_0_byte != di_0_lastByte)){
     di_0_lastByte = di_0_byte;
+    combiTry++;
     // Serial.print(di_0_byte);
     if (playSound)
       startMp3Play(5,DEFAULT_VOLUME);
@@ -417,6 +419,7 @@ void state_2() {
     Serial.print(F("Enter State: "));
     Serial.println(2);     
     di_0_lastByte = 0;
+    combiTry = 0;
     lastState = currentState;
 
     symbolCombi = 0; // Initialise combination
@@ -424,6 +427,8 @@ void state_2() {
 
 // Perform state tasks
   symbolCombinaison(true);
+Serial.print("Try: ");
+Serial.print(combiTry);
 Serial.print("Combi:");
 Serial.println(symbolCombi);
 if (symbolCombi == B0001111)
@@ -435,7 +440,11 @@ if (symbolCombi == B0001111)
   openLatch(LATCH_4);
   currentState = STATE_3; 
 }
-
+else if (combiTry >= 4){
+  startMp3Play(6,DEFAULT_VOLUME);
+  symbolCombi = 0;
+  combiTry = 0;
+}
 delay(1000);
 
 // Check for state transitions
