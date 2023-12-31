@@ -69,8 +69,8 @@ byte gemState = 0;
 byte symbolCombi = 0;
 byte di_0_lastByte = 0;
 byte combiTry = 0;
-long startTime;
-long symbolTimeout = 20 * 1000;
+unsigned long startTime;
+unsigned long symbolTimeout = 8 * 1000;
 bool timerActive = false;
 
 
@@ -135,7 +135,7 @@ byte readCogStates(bool playSound){
   return newCogStates;
 }
 // -------------------------------------------------------------------------------------
-void symbolCombinaison(bool playSound){
+bool symbolCombinaison(bool playSound){
   byte di_0_byte = 0;
 
   di_0_byte = di_0.p0<<7 | di_0.p1<<6  | di_0.p2<<5 | di_0.p3<<4 | di_0.p4<<3 | di_0.p5<<2 | di_0.p6<<1| di_0.p7;
@@ -157,6 +157,9 @@ void symbolCombinaison(bool playSound){
       symbolCombi = 0;
       }
     }
+    if (di_0_byte == 0xFF)
+      return false; // No touch
+    else return true;
   }
   
 // -------------------------------------------------------------------------------------
@@ -430,12 +433,18 @@ void state_2() {
   }
 
 // Perform state tasks
-  symbolCombinaison(true);
-//Serial.print("Try: ");
-//Serial.print(combiTry);
-//Serial.print("Combi:");
-//Serial.println(symbolCombi);
 
+//delay (500);
+byte touched = symbolCombinaison(true);
+if ((touched) && (timerActive))
+  startTime = millis(); // Restart timer
+
+/*
+Serial.print("Try: ");
+Serial.print(combiTry);
+Serial.print("Combi:");
+Serial.println(symbolCombi);
+*/
 if ((combiTry == 1) && (!timerActive)){ // First try
 /* Start Timer Here */
   startTime = millis();
@@ -452,10 +461,16 @@ if (symbolCombi == B0001111)
   currentState = STATE_3; 
 }
 else {
-  if ((combiTry >= 4) || ((millis() - startTime) > symbolTimeout)){ 
+
+  if ((timerActive) && ((combiTry >= 4) || ((millis() - startTime) > symbolTimeout))){ 
+    Serial.println("Failed");
+    stopMp3Play();
     startMp3Play(6,DEFAULT_VOLUME);
     symbolCombi = 0;
     combiTry = 0;
+    if (touched == false)
+      di_0_lastByte = 0; 
+    timerActive = false;
   } 
 }
 
