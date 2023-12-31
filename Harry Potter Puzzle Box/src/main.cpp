@@ -108,7 +108,7 @@ byte readPuckStates(bool playSound){
     Serial.print(" ");  
     Serial.println(newPuckStates);  
     if (playSound)
-      startMp3Play(2,DEFAULT_VOLUME);
+      startMp3Play(3,DEFAULT_VOLUME);
   }
   lastPuckStates = newPuckStates;
 
@@ -121,7 +121,7 @@ byte readCogStates(bool playSound){
   if (newCogStates < lastCogStates){  
     Serial.println(newCogStates);  
     if (playSound)
-      startMp3Play(3,DEFAULT_VOLUME);
+      startMp3Play(4,DEFAULT_VOLUME);
   }
   lastCogStates = newCogStates;
 
@@ -165,6 +165,8 @@ byte readCogStates(bool playSound){
         else {
           digitalWrite(GEMLED_G,LOW);
           digitalWrite(GEMLED_R,HIGH);
+          if (playSound)
+            startMp3Play(6,DEFAULT_VOLUME);
           gemSequence = 0;
         }
       }
@@ -182,6 +184,8 @@ byte readCogStates(bool playSound){
         else{
           digitalWrite(GEMLED_G,LOW);
           digitalWrite(GEMLED_R,HIGH);
+          if (playSound)
+            startMp3Play(6,DEFAULT_VOLUME);
           gemSequence = 0;
         }
       }
@@ -198,6 +202,8 @@ byte readCogStates(bool playSound){
         else {
           digitalWrite(GEMLED_G,LOW);
           digitalWrite(GEMLED_R,HIGH);
+          if (playSound)
+            startMp3Play(6,DEFAULT_VOLUME);
           gemSequence = 0;
         }
       }
@@ -214,6 +220,8 @@ byte readCogStates(bool playSound){
       else {
         digitalWrite(GEMLED_G,LOW);
         digitalWrite(GEMLED_R,HIGH);
+        if (playSound)
+            startMp3Play(6,DEFAULT_VOLUME);
         gemSequence = 0;
       }
       }
@@ -354,8 +362,12 @@ void state_1() {
 
 /********** Perform state tasks *********/
 // Check for state transitions
-gemState = readGemState(false);
+gemState = readGemState(true);
 if (gemState == 4) {
+  startMp3Play(5,DEFAULT_VOLUME);
+  delay(2000);
+ // digitalWrite(GEMLED_R,LOW); // Turn off Leds
+ // digitalWrite(GEMLED_G,LOW); // Turn off Leds
   openLatch(LATCH_3);
   currentState = STATE_2; // Gem sequence completed. Open TRAP_3
 }
