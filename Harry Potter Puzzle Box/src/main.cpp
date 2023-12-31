@@ -61,6 +61,9 @@ byte lastCogStates = 0;
 
 int lidState;
 
+int gemSequence = 0;
+bool gemPresent = false;
+
 
 
 DY::Player player(&Serial2);
@@ -156,7 +159,9 @@ void state_init() {
   currentState = puzzleStates(savedState);
   Serial.print(F("Current State: "));
   Serial.println(currentState); 
-     
+  /******************   TEMP FORCE STATE *****************/
+  currentState = STATE_1;
+  /*******************************************************/
   }
 
 // Perform state tasks
@@ -178,8 +183,7 @@ void state_0() {
 // Monitor cogs for trap_2 trigger and then move to state_1 
 // Monitor pucks and play sound when detected
 
-
-// If entering the state, do initialization stuff
+/********* If entering the state, do initialization stuff *********/
   if (currentState != lastState) {     
     EEPROM.write(EPROM_STATE_ADDRESS,currentState);   
 
@@ -191,7 +195,7 @@ void state_0() {
   }
 
 
-// Perform state tasks
+/********** Perform state tasks *********/
 // Check for state transitions
 /***
 **** Uncomment when LidState works ****
@@ -209,17 +213,19 @@ Serial.println(mp3Busy);
   byte cogStates = readCogStates(true);
   if (cogStates == 0) {
 // All Cogs are in place.  Turn on cog Led and change state to open Trap_2
-    Serial.print("Cog States: ");
-    Serial.println(cogStates);
+   // Serial.print("Cog States: ");
+   // Serial.println(cogStates);
     pcf8574_1.digitalWrite(P4, LOW); // Turn on Cog Led
     delay(2000);
     openLatch(LATCH_2);
-
+    currentState = STATE_1; // Change state
   }
   else
     pcf8574_1.digitalWrite(P4, HIGH);
   
-  // If leaving the state, do clean up stuff
+
+  
+/********** If leaving the state, do clean up stuff  *********/
  if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
     
   }
@@ -227,18 +233,131 @@ Serial.println(mp3Busy);
 }
 // -------------------------------------------------------------------------------------
 void state_1() {
+  // Gem puzzle
+  // Winning sequence is:  Left, Down, Up, RightGem
+  // Winning states are: 13, 11, 14, 7
+  // Bad sequence or timeout resets squence.
+  // Led Green if new position is correct or Red of incorrect.
+  // Turn led off if gem not present.
+  // Winning sequence plays sound and opens TRAP_3
 
-// If entering the state, do initialization stuff
+/********* If entering the state, do initialization stuff *********/
   if (currentState != lastState) {         
     lastState = currentState;
-   
+    Serial.print(F("Enter State: "));
+    Serial.println(1);
+
+    gemSequence = 0; // Initialise Gem sequence
   }
 
-// Perform state tasks
-
+/********** Perform state tasks *********/
 // Check for state transitions
 
-// If leaving the state, do clean up stuff
+  byte gemState = digitalRead(GEM_1);
+
+  byte tmpGem = digitalRead(GEM_2);
+  gemState = gemState | tmpGem << 1;
+  tmpGem = digitalRead(GEM_3);
+  gemState = gemState | tmpGem << 2;
+  tmpGem = digitalRead(GEM_4);
+  gemState = gemState | tmpGem << 3;
+
+  Serial.print("Gem State: ");
+  Serial.println(gemState);
+  Serial.print("Gem Sequence: ");
+  Serial.println(gemSequence);
+  delay(1000);
+  
+  switch (gemState) {
+
+    case 15: // Gem Absent
+      digitalWrite(GEMLED_R,LOW);
+      digitalWrite(GEMLED_G,LOW);
+      gemPresent = false;
+      break;
+    
+    case 7: // Right
+      if (gemPresent == false){
+        gemPresent = true;
+        if (gemSequence == 3){
+          digitalWrite(GEMLED_R,LOW);
+          digitalWrite(GEMLED_G,HIGH);
+          gemSequence = 4;
+        }
+        else {
+          digitalWrite(GEMLED_G,LOW);
+          digitalWrite(GEMLED_R,HIGH);
+          gemSequence = 0;
+        }
+      }
+      break;
+        
+
+    case 11: // Down
+      if (gemPresent == false){
+        gemPresent = true;
+        if (gemSequence == 1){
+          digitalWrite(GEMLED_R,LOW);
+          digitalWrite(GEMLED_G,HIGH);
+          gemSequence = 2;
+        }
+        else{
+          digitalWrite(GEMLED_G,LOW);
+          digitalWrite(GEMLED_R,HIGH);
+          gemSequence = 0;
+        }
+      }
+      break;
+
+    case 13: // Left
+      if (gemPresent == false){
+        gemPresent = true;
+        if (gemSequence == 0){
+          digitalWrite(GEMLED_R,LOW);
+          digitalWrite(GEMLED_G,HIGH);
+          gemSequence = 1;
+        }
+        else {
+          digitalWrite(GEMLED_G,LOW);
+          digitalWrite(GEMLED_R,HIGH);
+          gemSequence = 0;
+        }
+      }
+      break;
+
+    case 14: // Up
+      if (gemPresent == false){
+        gemPresent = true;
+        if (gemSequence == 2){
+          digitalWrite(GEMLED_R,LOW);
+          digitalWrite(GEMLED_G,HIGH);
+          gemSequence = 3;
+      }
+      else {
+        digitalWrite(GEMLED_G,LOW);
+        digitalWrite(GEMLED_R,HIGH);
+        gemSequence = 0;
+      }
+      }
+      break;
+
+      default:
+        Serial.println("ERROR, Unknown Gem State");
+        break;
+      }
+  if (gemSequence == 4){
+    currentState = STATE_2; // Change State
+    digitalWrite(GEMLED_R,HIGH);
+    delay(1000);
+    digitalWrite(GEMLED_R,LOW);
+    delay(1000);
+    digitalWrite(GEMLED_G,HIGH);
+    delay(1000);
+    digitalWrite(GEMLED_G,LOW);
+    delay(1000);
+  }
+
+/********** If leaving the state, do clean up stuff  *********/
  if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
     
   }
@@ -246,9 +365,11 @@ void state_1() {
 // -------------------------------------------------------------------------------------
 void state_2() {
 // If entering the state, do initialization stuff
-  if (currentState != lastState) {         
+  if (currentState != lastState) {    
     lastState = currentState;
-   
+    Serial.print(F("Enter State: "));
+    Serial.println(2);     
+    lastState = currentState;
   }
 
 // Perform state tasks
@@ -343,6 +464,15 @@ void setup() {
   pinMode(PUCK_3,INPUT_PULLUP);  
   pinMode(PUCK_4,INPUT_PULLUP);  
   pinMode(LID_CONTACT,INPUT_PULLUP);   
+  pinMode(GEM_1,INPUT_PULLUP);
+  pinMode(GEM_2,INPUT_PULLUP);
+  pinMode(GEM_3,INPUT_PULLUP);
+  pinMode(GEM_4,INPUT_PULLUP);
+
+  
+  pinMode(GEMLED_G,OUTPUT);
+  pinMode(GEMLED_R,OUTPUT);
+
   pinMode(LATCH_2,OUTPUT);
   pinMode(LATCH_3,OUTPUT);
   pinMode(LATCH_4,OUTPUT);
