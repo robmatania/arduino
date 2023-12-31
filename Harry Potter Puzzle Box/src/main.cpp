@@ -27,6 +27,7 @@ void pcf0_InterruptionRoutine();
 void pcf1_InterruptionRoutine();
 
 PCF8574::DigitalInput di_0;
+// byte di_0;
 PCF8574::DigitalInput di_1;
 
 bool managePcfInterrupt_0 = false;
@@ -65,6 +66,8 @@ byte gemSequence = 0;
 bool gemPresent = false;
 byte gemState = 0;
 
+byte symbolCombi = 0;
+byte di_0_lastByte = 0;
 
 
 DY::Player player(&Serial2);
@@ -128,7 +131,32 @@ byte readCogStates(bool playSound){
   return newCogStates;
 }
 // -------------------------------------------------------------------------------------
- 
+void symbolCombinaison(bool playSound){
+  byte di_0_byte = 0;
+
+  di_0_byte = di_0.p0<<7 | di_0.p1<<6  | di_0.p2<<5 | di_0.p3<<4 | di_0.p4<<3 | di_0.p5<<2 | di_0.p6<<1| di_0.p7;
+  if ((di_0_byte != 0) && (di_0_byte != 0xFF) && (di_0_byte != di_0_lastByte)){
+    di_0_lastByte = di_0_byte;
+    // Serial.print(di_0_byte);
+    if (playSound)
+      startMp3Play(5,DEFAULT_VOLUME);
+    if (di_0.p4 == 0)
+      symbolCombi = symbolCombi | B00001000; // Hat
+    else if (di_0.p5 == 0)
+      symbolCombi = symbolCombi | B00000100; // 9 3/4
+    else if (di_0.p1 == 0)
+      symbolCombi = symbolCombi | B00000010; // Cauldron
+    else if (di_0.p7 == 0)
+      symbolCombi = symbolCombi | B00000001; // Cup
+    else {
+      symbolCombi = 0;
+      }
+    }
+  }
+  
+// -------------------------------------------------------------------------------------
+
+
  byte readGemState(bool playSound){
 
   byte newGemState = digitalRead(GEM_1);
@@ -270,7 +298,7 @@ void state_init() {
   Serial.print(F("Current State: "));
   Serial.println(currentState); 
   /******************   TEMP FORCE STATE *****************/
-  currentState = STATE_1;
+  currentState = STATE_2;
   /*******************************************************/
   }
 
@@ -346,7 +374,7 @@ void state_1() {
   // Gem puzzle
   // Winning sequence is:  Left, Down, Up, RightGem
   // Winning states are: 13, 11, 14, 7
-  // Bad sequence or timeout resets squence.
+  // Bad sequence or timeout resets sequence and plays lost sound.
   // Led Green if new position is correct or Red of incorrect.
   // Turn led off if gem not present.
   // Winning sequence plays sound and opens TRAP_3
@@ -363,13 +391,13 @@ void state_1() {
 /********** Perform state tasks *********/
 // Check for state transitions
 gemState = readGemState(true);
-if (gemState == 4) {
+if (gemState == 4) { // Gem sequence completed. Open TRAP_3
   startMp3Play(5,DEFAULT_VOLUME);
   delay(2000);
  // digitalWrite(GEMLED_R,LOW); // Turn off Leds
  // digitalWrite(GEMLED_G,LOW); // Turn off Leds
   openLatch(LATCH_3);
-  currentState = STATE_2; // Gem sequence completed. Open TRAP_3
+  currentState = STATE_2; 
 }
 /********** If leaving the state, do clean up stuff  *********/
  if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
@@ -378,15 +406,37 @@ if (gemState == 4) {
 }
 // -------------------------------------------------------------------------------------
 void state_2() {
+  // Symbols Puzzle
+  // Winning combination is: Hat, 8/34, Cauldron, Cup
+  // Bad combination or timeout resets combination and plays lost sound.
+  // Winning combination plays sound and opens TRAP_4
+
 // If entering the state, do initialization stuff
   if (currentState != lastState) {    
     lastState = currentState;
     Serial.print(F("Enter State: "));
     Serial.println(2);     
+    di_0_lastByte = 0;
     lastState = currentState;
+
+    symbolCombi = 0; // Initialise combination
   }
 
 // Perform state tasks
+  symbolCombinaison(true);
+Serial.print("Combi:");
+Serial.println(symbolCombi);
+if (symbolCombi == B0001111)
+// Combination completed
+{
+  delay(2000);
+  startMp3Play(4,DEFAULT_VOLUME);
+  delay(2000);
+  openLatch(LATCH_4);
+  currentState = STATE_3; 
+}
+
+delay(1000);
 
 // Check for state transitions
 
@@ -399,6 +449,8 @@ void state_2() {
 void state_3() {
 // If entering the state, do initialization stuff
   if (currentState != lastState) {         
+    Serial.print(F("Enter State: "));
+    Serial.println(3);
     lastState = currentState;
    
   }
