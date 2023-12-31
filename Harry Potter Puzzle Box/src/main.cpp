@@ -454,10 +454,10 @@ if ((combiTry == 1) && (!timerActive)){ // First try
 if (symbolCombi == B0001111)
 // Combination completed
 {
-  delay(2000);
+  delay(1000);
   startMp3Play(4,DEFAULT_VOLUME);
   delay(2000);
-  openLatch(LATCH_4);
+  openLatch(LATCH_5);
   currentState = STATE_3; 
 }
 else {
