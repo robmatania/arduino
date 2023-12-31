@@ -56,6 +56,9 @@ int helpBtn;
 
 byte newPuckStates;
 byte lastPuckStates = 0;
+byte newCogStates;
+byte lastCogStates = 0;
+
 int lidState;
 
 
@@ -80,7 +83,7 @@ void startMp3Play(int index,int vol)
   if (SOUND_ONOFF == 1){
     player.setVolume(vol); 
     player.playSpecified(index);
-   // Serial.println("Start Playing");
+    Serial.println("Start Playing");
   }
 }
 //--------------------------------------------------------------------------------------
@@ -108,7 +111,25 @@ byte readPuckStates(bool playSound){
   return newPuckStates;
   }
 //--------------------------------------------------------------------------------------
+byte readCogStates(bool playSound){
 
+  newCogStates =  di_1.p7  | di_1.p6 << 1 | di_1.p5 << 2;
+  if (newCogStates < lastCogStates){  
+    Serial.println(newCogStates);  
+    if (playSound)
+      startMp3Play(3,DEFAULT_VOLUME);
+  }
+  lastCogStates = newCogStates;
+
+  return newCogStates;
+}
+// -------------------------------------------------------------------------------------
+void openLatch(int latchPin)
+{
+  digitalWrite(latchPin, HIGH);
+  delay(200);
+  digitalWrite(latchPin, LOW);
+}
 // -------------------------------------------------------------------------------------
 
 void state_init() {
@@ -168,52 +189,36 @@ void state_0() {
 
     startMp3Play(1,DEFAULT_VOLUME);
   }
-Serial.print(mp3Busy);
-Serial.print(" ");
-Serial.println(lidState);
-delay(500);
+
 
 // Perform state tasks
 // Check for state transitions
+/***
+**** Uncomment when LidState works ****
     mp3Busy = readMp3State();
     if ((lidState == 1) && (mp3Busy == 0))
       stopMp3Play();
-
+***/
 #ifdef DEBUG
 Serial.print(F("mp3 State: "));
 Serial.println(mp3Busy);
 #endif
 
-  readPuckStates(true); // play sound in puck is inserted
-  
-  if (managePcfInterrupt_0) {
-    managePcfInterrupt_0 = false;
-    Serial.println("PCF_0: ");
-    di_0 = pcf8574_0.digitalReadAll();
-    Serial.print(di_0.p0, BIN);    
-    Serial.print(di_0.p1, BIN); 
-    Serial.print(di_0.p2, BIN);    
-    Serial.print(di_0.p3, BIN); 
-    Serial.print(di_0.p4, BIN); 
-    Serial.print(di_0.p5, BIN); 
-    Serial.print(di_0.p6, BIN);
-    Serial.print(di_0.p7, BIN);
-    Serial.println("----------");   
+  readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
+
+  byte cogStates = readCogStates(true);
+  if (cogStates == 0) {
+// All Cogs are in place.  Turn on cog Led and change state to open Trap_2
+    Serial.print("Cog States: ");
+    Serial.println(cogStates);
+    pcf8574_1.digitalWrite(P4, LOW); // Turn on Cog Led
+    delay(2000);
+    openLatch(LATCH_2);
+
   }
+  else
+    pcf8574_1.digitalWrite(P4, HIGH);
   
-  if (managePcfInterrupt_1) {
-    managePcfInterrupt_1 = false;
-    Serial.println("PCF_1: ");
-    di_1 = pcf8574_1.digitalReadAll();
-    Serial.print(di_1.p0, BIN);    
-    Serial.print(di_1.p1, BIN); 
-    Serial.print(di_1.p2, BIN);    
-    Serial.print(di_1.p3, BIN); 
-    Serial.print(di_1.p5, BIN); 
-    Serial.print(di_1.p6, BIN);
-    Serial.print(di_1.p7, BIN);
-    Serial.println("----------");    
-  }
   // If leaving the state, do clean up stuff
  if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
     
@@ -337,7 +342,11 @@ void setup() {
   pinMode(PUCK_2,INPUT_PULLUP);  
   pinMode(PUCK_3,INPUT_PULLUP);  
   pinMode(PUCK_4,INPUT_PULLUP);  
-  pinMode(LID_CONTACT,INPUT_PULLUP);  
+  pinMode(LID_CONTACT,INPUT_PULLUP);   
+  pinMode(LATCH_2,OUTPUT);
+  pinMode(LATCH_3,OUTPUT);
+  pinMode(LATCH_4,OUTPUT);
+  pinMode(LATCH_5,OUTPUT);
 
   pcf8574_0.pinMode(P0, INPUT); 
   pcf8574_0.pinMode(P1, INPUT); 
@@ -372,6 +381,7 @@ void setup() {
   if (pcf8574_0.begin()){
     Serial.println(F("PCF_0_0K"));
     Serial.println("");
+    di_0 = pcf8574_0.digitalReadAll(); // Initialise di_0
   } else {
     Serial.println(F("PCF_0_ERROR"));
     while(1);
@@ -379,7 +389,8 @@ void setup() {
 
   if (pcf8574_1.begin()){
     Serial.println(F("PCF_1_0K"));
-    pcf8574_1.digitalWrite(P4, HIGH);
+    di_1 = pcf8574_1.digitalReadAll();  // Initialise di_1
+    pcf8574_1.digitalWrite(P4, HIGH); // Turn off Cog Led
     Serial.println("");
   } else {
     Serial.println(F("PCF_1_ERROR"));
@@ -392,6 +403,19 @@ void loop(){
 
   mp3Busy = digitalRead(MP3_BUSY);
   
+
+  if (managePcfInterrupt_0) {
+    managePcfInterrupt_0 = false;
+    Serial.println("PCF_0: ");
+    di_0 = pcf8574_0.digitalReadAll();
+  }
+  
+  if (managePcfInterrupt_1) {
+    managePcfInterrupt_1 = false;
+    Serial.println("PCF_1: ");
+    di_1 = pcf8574_1.digitalReadAll();
+  }
+
 
   switch (currentState) {
 
