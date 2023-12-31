@@ -69,6 +69,9 @@ byte gemState = 0;
 byte symbolCombi = 0;
 byte di_0_lastByte = 0;
 byte combiTry = 0;
+long startTime;
+long symbolTimeout = 20 * 1000;
+bool timerActive = false;
 
 
 DY::Player player(&Serial2);
@@ -420,6 +423,7 @@ void state_2() {
     Serial.println(2);     
     di_0_lastByte = 0;
     combiTry = 0;
+    timerActive = false;
     lastState = currentState;
 
     symbolCombi = 0; // Initialise combination
@@ -427,10 +431,17 @@ void state_2() {
 
 // Perform state tasks
   symbolCombinaison(true);
-Serial.print("Try: ");
-Serial.print(combiTry);
-Serial.print("Combi:");
-Serial.println(symbolCombi);
+//Serial.print("Try: ");
+//Serial.print(combiTry);
+//Serial.print("Combi:");
+//Serial.println(symbolCombi);
+
+if ((combiTry == 1) && (!timerActive)){ // First try
+/* Start Timer Here */
+  startTime = millis();
+  timerActive = true;
+}
+
 if (symbolCombi == B0001111)
 // Combination completed
 {
@@ -440,12 +451,13 @@ if (symbolCombi == B0001111)
   openLatch(LATCH_4);
   currentState = STATE_3; 
 }
-else if (combiTry >= 4){
-  startMp3Play(6,DEFAULT_VOLUME);
-  symbolCombi = 0;
-  combiTry = 0;
+else {
+  if ((combiTry >= 4) || ((millis() - startTime) > symbolTimeout)){ 
+    startMp3Play(6,DEFAULT_VOLUME);
+    symbolCombi = 0;
+    combiTry = 0;
+  } 
 }
-delay(1000);
 
 // Check for state transitions
 
