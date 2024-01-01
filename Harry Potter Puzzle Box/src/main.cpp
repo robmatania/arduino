@@ -289,10 +289,19 @@ bool symbolCombinaison(bool playSound){
 // -------------------------------------------------------------------------------------
 void openLatch(int latchPin)
 {
-  Serial.print("OPEN LATCH");
+  Serial.println("OPEN LATCH");
   digitalWrite(latchPin, HIGH);
   delay(200);
   digitalWrite(latchPin, LOW);
+}
+// -------------------------------------------------------------------------------------
+void closeAllLatches(void)
+{
+  Serial.println("Close all latches");
+  digitalWrite(LATCH_2, LOW);
+  digitalWrite(LATCH_3, LOW);
+  digitalWrite(LATCH_4, LOW);
+  digitalWrite(LATCH_5, LOW);
 }
 // -------------------------------------------------------------------------------------
 void clearAllSpellLeds(void){
@@ -334,19 +343,33 @@ void state_init() {
 
 
   if (helpBtn == 0) {
+/*  ***************   RESET GAME **************/
+    Serial.println("OPEN LATCHES");
+    openLatch(LATCH_2);
+    delay(1000);
+    openLatch(LATCH_3);
+    delay(1000);
+    openLatch(LATCH_4);
+    delay(1000);
+    openLatch(LATCH_5);
+  
+    Serial.println("Reset EEPROM"); 
     EEPROM.write(EPROM_STATE_ADDRESS,0xFF);
-    Serial.println("Resetting EEPROM"); 
+
   }
+
   savedState = EEPROM.read(EPROM_STATE_ADDRESS);
-  Serial.print(F("Saved State: "));
+
+  Serial.print(F("Initial State: "));
   Serial.println(savedState); 
 
   if (savedState == 0xFF)
     savedState = STATE_0; // First time
   
   currentState = puzzleStates(savedState);
+
   /******************   TEMP FORCE STATE *****************/
-  currentState = STATE_4;
+  currentState = STATE_5;
   /*******************************************************/
   Serial.print(F("Current State: "));
   Serial.println(currentState); 
@@ -381,6 +404,7 @@ void state_0() {
     lastState = currentState;
 
     startMp3Play(1,DEFAULT_VOLUME);
+  
   }
 
 
@@ -432,6 +456,7 @@ void state_1() {
 
 /********* If entering the state, do initialization stuff *********/
   if (currentState != lastState) {         
+    EEPROM.write(EPROM_STATE_ADDRESS,currentState);   
     lastState = currentState;
     Serial.print(F("Enter State: "));
     Serial.println(1);
@@ -466,6 +491,7 @@ void state_2() {
 
 // If entering the state, do initialization stuff
   if (currentState != lastState) {    
+    EEPROM.write(EPROM_STATE_ADDRESS,currentState);   
     lastState = currentState;
     Serial.print(F("Enter State: "));
     Serial.println(2);     
@@ -536,6 +562,7 @@ void state_3() {
 
 // If entering the state, do initialization stuff
   if (currentState != lastState) {         
+    EEPROM.write(EPROM_STATE_ADDRESS,currentState);   
     Serial.print(F("Enter State: "));
     Serial.println(3);
     lastState = currentState;
@@ -572,6 +599,7 @@ void state_4() {
 
 // If entering the state, do initialization stuff
   if (currentState != lastState) {    
+    EEPROM.write(EPROM_STATE_ADDRESS,currentState);   
     Serial.print(F("Enter State: "));
     Serial.println(4);
     spellState = 1;     
@@ -770,6 +798,7 @@ void state_5() {
 
 // If entering the state, do initialization stuff
   if (currentState != lastState) {    
+    EEPROM.write(EPROM_STATE_ADDRESS,currentState);   
     Serial.print(F("Enter State: "));
     Serial.println(5);    
     lastState = currentState;
@@ -789,8 +818,8 @@ if (pucks == 0){
   // Go to STATE_6 idle state
   startMp3Play(7,DEFAULT_VOLUME);
   delay(2000);
-  myservo.write(SERVO_SPEED);
-  delay(200);
+  myservo.write(FWD_SPEED);
+  delay(1500);
   myservo.write(90);
 
   currentState = STATE_6;
@@ -804,6 +833,7 @@ if (pucks == 0){
 void state_6() {
 // If entering the state, do initialization stuff
   if (currentState != lastState) {
+    EEPROM.write(EPROM_STATE_ADDRESS,currentState);   
     Serial.print(F("Enter State: "));
     Serial.println(6);             
     lastState = currentState;
@@ -861,6 +891,7 @@ void setup() {
   pinMode(SPELL_LED_8,OUTPUT);
   pinMode(SPELL_LED_9,OUTPUT);
   pinMode(SPELL_LED_10,OUTPUT);
+  pinMode(HELP_LED,OUTPUT);
 
   pcf8574_0.pinMode(P0, INPUT); 
   pcf8574_0.pinMode(P1, INPUT); 
@@ -901,11 +932,15 @@ void setup() {
 
   currentState = INIT;
   lastState = NONE;
+
+  closeAllLatches();
   
+  myservo.attach(7);
+  myservo.write(90); // Servo is stationary.
   
    Serial.print(F("Version: "));
    Serial.println(VERSION);
-   helpBtn = digitalRead(HELP_BTN);    
+   helpBtn = digitalRead(HELP_BTN); 
    
    player.begin();
 
@@ -948,9 +983,20 @@ if (pcf8574_3.begin()){
 
   digitalWrite(DRAGON_SPELL_LED,LOW);
 
-  myservo.attach(7);
-// Servo is stationary.
-  myservo.write(90);
+ 
+/*
+   Serial.print(di_0.p0, BIN);    
+   Serial.print(di_0.p1, BIN); 
+   Serial.print(di_0.p2, BIN);    
+   Serial.print(di_0.p3, BIN); 
+   Serial.print(di_0.p4, BIN); 
+   Serial.print(di_0.p5, BIN); 
+   Serial.print(di_0.p6, BIN);
+   Serial.print(di_0.p7, BIN);
+   Serial.println("----------");   
+
+*/
+
 }
 
 void loop(){
@@ -1024,7 +1070,41 @@ if (managePcfInterrupt_2) {
     default:
       break;
   }
- 
+ // Read key to manually move servo
+if (Serial.available() > 0){
+  byte inChar = Serial.read();
+  Serial.println(inChar);
+  if (inChar == 32)
+    myservo.write(90);
+  else if (inChar == 49){
+    Serial.print("MOVE");
+   myservo.write(FWD_SPEED);
+   delay(100);
+  }
+  else if (inChar == 50){
+   myservo.write(FWD_SPEED);
+   delay(200);
+  }
+  else if (inChar == 51){
+   myservo.write(FWD_SPEED);
+   delay(500);
+  }
+  else if (inChar == 52){
+   myservo.write(BCK_SPEED);
+   delay(100);
+  }
+  else if (inChar == 53){
+   myservo.write(BCK_SPEED);
+   delay(200);
+  }
+  else if (inChar == 54){
+   myservo.write(BCK_SPEED);
+   delay(500);
+  }
+  myservo.write(90);
+}
+
+
 }
 void pcf0_InterruptionRoutine(){
   managePcfInterrupt_0 = true;
