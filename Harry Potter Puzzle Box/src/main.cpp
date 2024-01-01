@@ -89,6 +89,8 @@ int spellLedsTable[10] = {SPELL_LED_1, SPELL_LED_2, SPELL_LED_3, SPELL_LED_4, SP
 
 DY::Player player(&Serial2);
 
+Servo myservo; 
+
 
 //--------------------------------------------------------------------------------------
 int readMp3State(void){
@@ -438,6 +440,8 @@ void state_1() {
   }
 
 /********** Perform state tasks *********/
+readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
+
 // Check for state transitions
 gemState = readGemState(true);
 if (gemState == 4) { // Gem sequence completed. Open TRAP_3
@@ -474,6 +478,7 @@ void state_2() {
   }
 
 // Perform state tasks
+readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
 
 //delay (500);
 byte touched = symbolCombinaison(true);
@@ -538,6 +543,8 @@ void state_3() {
   }
 
 // Perform state tasks
+readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
+
 int gt = analogRead(DRAGON_TUBE);
 //Serial.println(gt);
 delay(500);
@@ -573,6 +580,7 @@ void state_4() {
   }
 
 // Perform state tasks
+readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
 unsigned int di_23 = di_2.p0 | di_2.p1<<1 | di_2.p2<<2 |di_2.p3<<3 | di_2.p4<<4 | di_2.p5<<5 | di_2.p6<<6 | di_2.p7<<7 | di_3.p0<<8 | di_3.p1<<9;   
 
 //Serial.print("DI_23: ");
@@ -593,6 +601,7 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
     break;
@@ -605,6 +614,7 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
     break;
@@ -617,6 +627,7 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
     break;
@@ -629,6 +640,7 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
     break;
@@ -641,6 +653,7 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
     break;
@@ -653,6 +666,7 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
     break;    
@@ -665,6 +679,7 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
     break;
@@ -677,6 +692,7 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
     break;
@@ -689,6 +705,7 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
     break;
@@ -701,6 +718,7 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
     break;
@@ -713,20 +731,23 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
       }
       else {
         clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
         spellState = 1;
       }
       break;
 
     case 12:  
     if (di_2.p5 == 0){
+        startMp3Play(9,DEFAULT_VOLUME);
         clearAllSpellLeds();
         digitalWrite(SPELL_LED_5,HIGH);
         sequenceSpellLeds(2);
         digitalWrite(SPELL_LED_5,LOW);
-        startMp3Play(3,DEFAULT_VOLUME);
+
         delay(1000);
-        //openLatch(LATCH_4);
+        openLatch(LATCH_4);
         spellState = 13;
+        currentState = STATE_5;
       }
       break;
 
@@ -743,16 +764,37 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
 }
 // -------------------------------------------------------------------------------------
 void state_5() {
+  // Puck puzzle
+  // All pucks should have been obtained.
+  // When all 4 pucks are in place, play end of game sound, open chamber.
+
 // If entering the state, do initialization stuff
-  if (currentState != lastState) {         
+  if (currentState != lastState) {    
+    Serial.print(F("Enter State: "));
+    Serial.println(5);    
     lastState = currentState;
    
   }
 
 // Perform state tasks
+byte pucks = readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
 
 // Check for state transitions
+Serial.print("puck status: ");
+Serial.print(pucks);
+delay(1000);
+if (pucks == 0){
+  // Game solved
+  // Play winning sound and OPEN CHAMBER
+  // Go to STATE_6 idle state
+  startMp3Play(7,DEFAULT_VOLUME);
+  delay(2000);
+  myservo.write(SERVO_SPEED);
+  delay(200);
+  myservo.write(90);
 
+  currentState = STATE_6;
+}
 // If leaving the state, do clean up stuff
  if (currentState != lastState) {        
 
@@ -761,7 +803,9 @@ void state_5() {
 // -------------------------------------------------------------------------------------
 void state_6() {
 // If entering the state, do initialization stuff
-  if (currentState != lastState) {         
+  if (currentState != lastState) {
+    Serial.print(F("Enter State: "));
+    Serial.println(6);             
     lastState = currentState;
    
   }
@@ -902,8 +946,11 @@ if (pcf8574_3.begin()){
     while(1);
   }
 
-
   digitalWrite(DRAGON_SPELL_LED,LOW);
+
+  myservo.attach(7);
+// Servo is stationary.
+  myservo.write(90);
 }
 
 void loop(){
@@ -927,31 +974,15 @@ if (managePcfInterrupt_2) {
     managePcfInterrupt_2 = false;
     Serial.println("PCF_2: ");
     di_2 = pcf8574_2.digitalReadAll();
-    Serial.print(di_2.p0, BIN);    
-    Serial.print(di_2.p1, BIN); 
-    Serial.print(di_2.p2, BIN);    
-    Serial.print(di_2.p3, BIN); 
-    Serial.print(di_2.p4, BIN); 
-    Serial.print(di_2.p5, BIN); 
-    Serial.print(di_2.p6, BIN);
-    Serial.print(di_2.p7, BIN);
-    Serial.println("----------"); 
   }
 
   if (managePcfInterrupt_3) {
     managePcfInterrupt_3 = false;
     Serial.println("PCF_3: ");
     di_3 = pcf8574_3.digitalReadAll();
-    Serial.print(di_3.p0, BIN);    
-    Serial.print(di_3.p1, BIN); 
-    Serial.print(di_3.p2, BIN);    
-    Serial.print(di_3.p3, BIN); 
-    Serial.print(di_3.p4, BIN); 
-    Serial.print(di_3.p5, BIN); 
-    Serial.print(di_3.p6, BIN);
-    Serial.print(di_3.p7, BIN);
-    Serial.println("----------"); 
   }
+
+  
 
   switch (currentState) {
 
