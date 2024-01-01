@@ -62,6 +62,7 @@ byte savedState;
 puzzleStates lastState, currentState;
 int mp3Busy = 1; // 0=playing; 1=not playing, 
 int helpBtn;
+bool played = false;
 
 byte newPuckStates;
 byte lastPuckStates = 0;
@@ -110,6 +111,22 @@ void startMp3Play(int index,int vol)
     player.setVolume(vol); 
     player.playSpecified(index);
     Serial.println("Start Playing");
+  }
+}
+// -------------------------------------------------------------------------------------
+void startMp3PlaySynchro(int index,int vol){
+  if (SOUND_ONOFF == 1){
+    digitalWrite(HELP_LED,HIGH);
+    player.setVolume(vol); 
+    player.playSpecified(index);
+    Serial.print("Start Playing synchro");
+    Serial.println(index);
+    mp3Busy = 0;
+    delay(1000);
+    while(mp3Busy == 0)
+      mp3Busy = readMp3State();
+    Serial.println("End Playing synhro");
+     digitalWrite(HELP_LED,LOW);
   }
 }
 //--------------------------------------------------------------------------------------
@@ -369,7 +386,7 @@ void state_init() {
   currentState = puzzleStates(savedState);
 
   /******************   TEMP FORCE STATE *****************/
-  currentState = STATE_5;
+  //currentState = STATE_5;
   /*******************************************************/
   Serial.print(F("Current State: "));
   Serial.println(currentState); 
@@ -404,6 +421,7 @@ void state_0() {
     lastState = currentState;
 
     startMp3Play(1,DEFAULT_VOLUME);
+    
   
   }
 
@@ -420,6 +438,15 @@ void state_0() {
 Serial.print(F("mp3 State: "));
 Serial.println(mp3Busy);
 #endif
+
+ helpBtn = digitalRead(HELP_BTN); 
+ if (helpBtn ==0){
+  startMp3PlaySynchro(10,DEFAULT_VOLUME);
+  startMp3PlaySynchro(11,DEFAULT_VOLUME);
+  startMp3PlaySynchro(12,DEFAULT_VOLUME);
+  startMp3PlaySynchro(13,DEFAULT_VOLUME);
+ }
+
 
   readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
 
@@ -462,9 +489,24 @@ void state_1() {
     Serial.println(1);
 
     gemSequence = 0; // Initialise Gem sequence
+    played = false;
+   
   }
 
 /********** Perform state tasks *********/
+  helpBtn = digitalRead(HELP_BTN); 
+  if ((helpBtn ==0) && (!played)){
+    Serial.println("Play 14");
+    startMp3PlaySynchro(14,DEFAULT_VOLUME);
+    played = true;
+ }
+
+  helpBtn = digitalRead(HELP_BTN); 
+  if (helpBtn ==0){
+    startMp3PlaySynchro(15,DEFAULT_VOLUME);
+ }
+
+
 readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
 
 // Check for state transitions
