@@ -22,20 +22,28 @@ Date: 2023
 
 #define adressPCF8574_0 0x20 
 #define adressPCF8574_1 0x21
+#define adressPCF8574_2 0x22 
+#define adressPCF8574_3 0x23
 
 void pcf0_InterruptionRoutine();
 void pcf1_InterruptionRoutine();
+void pcf2_InterruptionRoutine();
+void pcf3_InterruptionRoutine();
 
 PCF8574::DigitalInput di_0;
-// byte di_0;
 PCF8574::DigitalInput di_1;
+PCF8574::DigitalInput di_2;
+PCF8574::DigitalInput di_3;
 
 bool managePcfInterrupt_0 = false;
 bool managePcfInterrupt_1 = false;
+bool managePcfInterrupt_2 = false;
+bool managePcfInterrupt_3 = false;
 
 PCF8574 pcf8574_0(adressPCF8574_0,3,pcf0_InterruptionRoutine);
 PCF8574 pcf8574_1(adressPCF8574_1,2,pcf1_InterruptionRoutine);
-
+PCF8574 pcf8574_2(adressPCF8574_2,18,pcf2_InterruptionRoutine);
+PCF8574 pcf8574_3(adressPCF8574_3,19,pcf3_InterruptionRoutine);
 
 enum puzzleStates {                         // Define enumerated type for state machine states
   NONE,
@@ -73,6 +81,8 @@ unsigned long startTime;
 unsigned long symbolTimeout = 8 * 1000;
 bool timerActive = false;
 
+int spellState = 0;   
+
 
 DY::Player player(&Serial2);
 
@@ -98,7 +108,7 @@ void startMp3Play(int index,int vol)
   }
 }
 //--------------------------------------------------------------------------------------
-byte (bool playSound){
+byte readPuckStates(bool playSound){
   byte tmpPuckState;
 
   tmpPuckState = digitalRead(PUCK_1);
@@ -502,6 +512,7 @@ int gt = analogRead(DRAGON_TUBE);
 delay(500);
 if (gt > 15){
     digitalWrite(DRAGON_SPELL_LED,HIGH);
+    currentState = STATE_4;
 }
 
 
@@ -515,14 +526,24 @@ if (gt > 15){
 }
 // -------------------------------------------------------------------------------------
 void state_4() {
+  // Spell puzzle
+  // trace spell with wand by passing detectors in sequence.
+  // If sequence error, puzzle resets.
+  // Led is lit when sensor detected. Previous led is turned off.
+  // when spell is correctly traced, LATCH_5 is opened.
+
 // If entering the state, do initialization stuff
-  if (currentState != lastState) {         
+  if (currentState != lastState) {    
+    spellState = 0;     
     lastState = currentState;
-   
   }
 
 // Perform state tasks
 
+switch (spellState) {
+  case 0:
+  break;
+}
 // Check for state transitions
 
 // If leaving the state, do clean up stuff
@@ -614,6 +635,23 @@ void setup() {
   pcf8574_1.pinMode(P6, INPUT); //Cog
   pcf8574_1.pinMode(P7, INPUT); //Cog
 
+  pcf8574_2.pinMode(P0, INPUT); 
+  pcf8574_2.pinMode(P1, INPUT); 
+  pcf8574_2.pinMode(P2, INPUT); 
+  pcf8574_2.pinMode(P3, INPUT); 
+  pcf8574_2.pinMode(P4, INPUT);
+  pcf8574_2.pinMode(P5, INPUT);
+  pcf8574_2.pinMode(P6, INPUT);
+  pcf8574_2.pinMode(P7, INPUT);
+
+  pcf8574_3.pinMode(P0, INPUT); 
+  pcf8574_3.pinMode(P1, INPUT); 
+  pcf8574_3.pinMode(P2, INPUT); 
+  pcf8574_3.pinMode(P3, INPUT); 
+  pcf8574_3.pinMode(P4, INPUT);
+  pcf8574_3.pinMode(P5, INPUT);
+  pcf8574_3.pinMode(P6, INPUT);
+  pcf8574_3.pinMode(P7, INPUT);
 
   currentState = INIT;
   lastState = NONE;
@@ -644,6 +682,25 @@ void setup() {
     while(1);
   }
   
+if (pcf8574_2.begin()){
+    Serial.println(F("PCF_2_0K"));
+    Serial.println("");
+    di_2 = pcf8574_2.digitalReadAll(); // Initialise di_2
+  } else {
+    Serial.println(F("PCF_2_ERROR"));
+    while(1);
+  }
+
+if (pcf8574_3.begin()){
+    Serial.println(F("PCF_3_0K"));
+    Serial.println("");
+    di_3 = pcf8574_3.digitalReadAll(); // Initialise di_3
+  } else {
+    Serial.println(F("PCF_3_ERROR"));
+    while(1);
+  }
+
+
   digitalWrite(DRAGON_SPELL_LED,LOW);
 }
 
@@ -664,6 +721,35 @@ void loop(){
     di_1 = pcf8574_1.digitalReadAll();
   }
 
+if (managePcfInterrupt_2) {
+    managePcfInterrupt_2 = false;
+    Serial.println("PCF_2: ");
+    di_2 = pcf8574_2.digitalReadAll();
+    Serial.print(di_2.p0, BIN);    
+    Serial.print(di_2.p1, BIN); 
+    Serial.print(di_2.p2, BIN);    
+    Serial.print(di_2.p3, BIN); 
+    Serial.print(di_2.p4, BIN); 
+    Serial.print(di_2.p5, BIN); 
+    Serial.print(di_2.p6, BIN);
+    Serial.print(di_2.p7, BIN);
+    Serial.println("----------"); 
+  }
+
+  if (managePcfInterrupt_3) {
+    managePcfInterrupt_3 = false;
+    Serial.println("PCF_3: ");
+    di_3 = pcf8574_3.digitalReadAll();
+    Serial.print(di_3.p0, BIN);    
+    Serial.print(di_3.p1, BIN); 
+    Serial.print(di_3.p2, BIN);    
+    Serial.print(di_3.p3, BIN); 
+    Serial.print(di_3.p4, BIN); 
+    Serial.print(di_3.p5, BIN); 
+    Serial.print(di_3.p6, BIN);
+    Serial.print(di_3.p7, BIN);
+    Serial.println("----------"); 
+  }
 
   switch (currentState) {
 
@@ -697,9 +783,13 @@ void loop(){
 }
 void pcf0_InterruptionRoutine(){
   managePcfInterrupt_0 = true;
-  
 }
-
 void pcf1_InterruptionRoutine(){
   managePcfInterrupt_1 = true;
+}
+void pcf2_InterruptionRoutine(){
+  managePcfInterrupt_2 = true;
+}
+void pcf3_InterruptionRoutine(){
+  managePcfInterrupt_3 = true;
 }
