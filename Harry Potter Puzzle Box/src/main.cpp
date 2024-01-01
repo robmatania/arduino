@@ -386,7 +386,7 @@ void state_init() {
   currentState = puzzleStates(savedState);
 
   /******************   TEMP FORCE STATE *****************/
-  //currentState = STATE_5;
+  //currentState = STATE_4;
   /*******************************************************/
   Serial.print(F("Current State: "));
   Serial.println(currentState); 
@@ -518,6 +518,7 @@ if (gemState == 4) { // Gem sequence completed. Open TRAP_3
  // digitalWrite(GEMLED_G,LOW); // Turn off Leds
   openLatch(LATCH_3);
   currentState = STATE_2; 
+  startMp3PlaySynchro(16,DEFAULT_VOLUME);
 }
 /********** If leaving the state, do clean up stuff  *********/
  if (currentState != lastState) {         // If we are leaving the state, do clean up stuff
@@ -547,6 +548,11 @@ void state_2() {
 
 // Perform state tasks
 readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
+
+helpBtn = digitalRead(HELP_BTN); 
+  if (helpBtn ==0){
+    startMp3PlaySynchro(19,DEFAULT_VOLUME);
+ }
 
 //delay (500);
 byte touched = symbolCombinaison(true);
@@ -614,6 +620,11 @@ void state_3() {
 // Perform state tasks
 readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
 
+helpBtn = digitalRead(HELP_BTN); 
+  if (helpBtn ==0){
+    startMp3PlaySynchro(17,DEFAULT_VOLUME);
+ }
+
 int gt = analogRead(DRAGON_TUBE);
 //Serial.println(gt);
 delay(500);
@@ -652,7 +663,10 @@ void state_4() {
 // Perform state tasks
 readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
 unsigned int di_23 = di_2.p0 | di_2.p1<<1 | di_2.p2<<2 |di_2.p3<<3 | di_2.p4<<4 | di_2.p5<<5 | di_2.p6<<6 | di_2.p7<<7 | di_3.p0<<8 | di_3.p1<<9;   
-
+helpBtn = digitalRead(HELP_BTN); 
+  if (helpBtn ==0){
+    startMp3PlaySynchro(20,DEFAULT_VOLUME);
+ }
 //Serial.print("DI_23: ");
 //Serial.println(di_23,BIN);
 delay (100);
@@ -819,6 +833,11 @@ if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
         spellState = 13;
         currentState = STATE_5;
       }
+      else {
+        clearAllSpellLeds();
+        startMp3Play(8,DEFAULT_VOLUME);
+        spellState = 1;
+      }
       break;
 
     default:
@@ -850,10 +869,15 @@ void state_5() {
 // Perform state tasks
 byte pucks = readPuckStates(true); // Just play sound when puck is inserted. No effect on state transition.
 
+helpBtn = digitalRead(HELP_BTN); 
+  if (helpBtn ==0){
+    startMp3PlaySynchro(18,DEFAULT_VOLUME);
+ }
+
 // Check for state transitions
-Serial.print("puck status: ");
-Serial.print(pucks);
-delay(1000);
+//Serial.print("puck status: ");
+//Serial.print(pucks);
+//delay(1000);
 if (pucks == 0){
   // Game solved
   // Play winning sound and OPEN CHAMBER
