@@ -82,6 +82,9 @@ unsigned long symbolTimeout = 8 * 1000;
 bool timerActive = false;
 
 int spellState = 0;   
+unsigned int last_di_23 = 0;
+
+int spellLedsTable[10] = {SPELL_LED_1, SPELL_LED_2, SPELL_LED_3, SPELL_LED_4, SPELL_LED_5, SPELL_LED_6, SPELL_LED_7, SPELL_LED_8, SPELL_LED_9, SPELL_LED_10};
 
 
 DY::Player player(&Serial2);
@@ -290,6 +293,33 @@ void openLatch(int latchPin)
   digitalWrite(latchPin, LOW);
 }
 // -------------------------------------------------------------------------------------
+void clearAllSpellLeds(void){
+  digitalWrite(SPELL_LED_1,LOW);
+  digitalWrite(SPELL_LED_2,LOW);
+  digitalWrite(SPELL_LED_3,LOW);
+  digitalWrite(SPELL_LED_4,LOW);
+  digitalWrite(SPELL_LED_5,LOW);
+  digitalWrite(SPELL_LED_6,LOW);
+  digitalWrite(SPELL_LED_7,LOW);
+  digitalWrite(SPELL_LED_8,LOW);
+  digitalWrite(SPELL_LED_9,LOW);
+  digitalWrite(SPELL_LED_10,LOW);
+  //Serial.println("LEDS CLEARED");
+  }
+// -------------------------------------------------------------------------------------
+void sequenceSpellLeds(int cnt){
+  int i;
+  clearAllSpellLeds();
+  for (int counter=0;counter<cnt;counter++){
+    for (i=0;i<10;i++){
+      if (i>0)
+        digitalWrite(spellLedsTable[i-1],LOW);
+      digitalWrite(spellLedsTable[i],HIGH);
+      delay(100);
+    }
+    digitalWrite(spellLedsTable[i-1],LOW);
+  }
+}
 
 void state_init() {
 
@@ -313,11 +343,12 @@ void state_init() {
     savedState = STATE_0; // First time
   
   currentState = puzzleStates(savedState);
+  /******************   TEMP FORCE STATE *****************/
+  currentState = STATE_4;
+  /*******************************************************/
   Serial.print(F("Current State: "));
   Serial.println(currentState); 
-  /******************   TEMP FORCE STATE *****************/
-  currentState = STATE_2;
-  /*******************************************************/
+  
   }
 
 // Perform state tasks
@@ -534,15 +565,174 @@ void state_4() {
 
 // If entering the state, do initialization stuff
   if (currentState != lastState) {    
-    spellState = 0;     
+    Serial.print(F("Enter State: "));
+    Serial.println(4);
+    spellState = 1;     
     lastState = currentState;
+    last_di_23 = 0;
   }
 
 // Perform state tasks
+unsigned int di_23 = di_2.p0 | di_2.p1<<1 | di_2.p2<<2 |di_2.p3<<3 | di_2.p4<<4 | di_2.p5<<5 | di_2.p6<<6 | di_2.p7<<7 | di_3.p0<<8 | di_3.p1<<9;   
 
-switch (spellState) {
-  case 0:
-  break;
+//Serial.print("DI_23: ");
+//Serial.println(di_23,BIN);
+delay (100);
+
+if ((di_23 != 0B1111111111) && (last_di_23 != di_23)){
+  Serial.print("DETECTION. SpellState= ");
+  Serial.println(spellState);
+
+  last_di_23 = di_23;
+  switch (spellState) {
+    case 1:
+      if (di_3.p0 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_1,HIGH);
+        spellState = 2;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+    break;
+
+    case 2:
+      if (di_2.p0 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_2,HIGH);
+        spellState = 3;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+    break;
+
+    case 3:
+      if (di_2.p7 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_3,HIGH);
+        spellState = 4;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+    break;
+
+    case 4:
+      if (di_2.p6 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_4,HIGH);
+        spellState = 5;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+    break;
+
+    case 5:
+      if (di_2.p5 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_5,HIGH);
+        spellState = 6;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+    break;
+
+   case 6:
+      if (di_2.p4 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_6,HIGH);
+        spellState = 7;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+    break;    
+
+    case 7:
+      if (di_2.p1 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_7,HIGH);
+        spellState = 8;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+    break;
+  
+    case 8:
+      if (di_2.p2 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_8,HIGH);
+        spellState = 9;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+    break;
+
+   case 9:
+      if (di_3.p0 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_1,HIGH);
+        spellState = 10;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+    break;
+
+   case 10:
+      if (di_2.p3 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_9,HIGH);
+        spellState = 11;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+    break;
+
+   case 11:
+      if (di_3.p1 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_10,HIGH);
+        spellState = 12;
+      }
+      else {
+        clearAllSpellLeds();
+        spellState = 1;
+      }
+      break;
+
+    case 12:  
+    if (di_2.p5 == 0){
+        clearAllSpellLeds();
+        digitalWrite(SPELL_LED_5,HIGH);
+        sequenceSpellLeds(2);
+        digitalWrite(SPELL_LED_5,LOW);
+        startMp3Play(3,DEFAULT_VOLUME);
+        delay(1000);
+        //openLatch(LATCH_4);
+        spellState = 13;
+      }
+      break;
+
+    default:
+      break;
+  }
 }
 // Check for state transitions
 
@@ -615,6 +805,18 @@ void setup() {
   pinMode(LATCH_3,OUTPUT);
   pinMode(LATCH_4,OUTPUT);
   pinMode(LATCH_5,OUTPUT);
+
+
+  pinMode(SPELL_LED_1,OUTPUT);
+  pinMode(SPELL_LED_2,OUTPUT);
+  pinMode(SPELL_LED_3,OUTPUT);
+  pinMode(SPELL_LED_4,OUTPUT);
+  pinMode(SPELL_LED_5,OUTPUT);
+  pinMode(SPELL_LED_6,OUTPUT);
+  pinMode(SPELL_LED_7,OUTPUT);
+  pinMode(SPELL_LED_8,OUTPUT);
+  pinMode(SPELL_LED_9,OUTPUT);
+  pinMode(SPELL_LED_10,OUTPUT);
 
   pcf8574_0.pinMode(P0, INPUT); 
   pcf8574_0.pinMode(P1, INPUT); 
@@ -776,6 +978,18 @@ if (managePcfInterrupt_2) {
       state_3();
       break;
   
+    case STATE_4:
+      state_4();
+      break;
+      
+    case STATE_5:
+      state_5();
+      break;
+
+    case STATE_6:
+      state_6();
+      break;
+
     default:
       break;
   }
