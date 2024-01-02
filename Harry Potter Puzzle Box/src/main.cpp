@@ -15,7 +15,7 @@ Date: 2023
 #include <HPPuzzleBox.h>
 
 #define NODEBUG 
-#define DEFAULT_VOLUME MIN_VOLUME
+#define DEFAULT_VOLUME MED_VOLUME
 #define SOUND_ONOFF  1 // 0 = off, 1 = on
 #define VERSION 0.1
 #define EPROM_STATE_ADDRESS 0
@@ -420,7 +420,7 @@ void state_0() {
     Serial.println(0);
     lastState = currentState;
 
-    startMp3Play(1,DEFAULT_VOLUME);
+    startMp3Play(2,DEFAULT_VOLUME);
     
   
   }
