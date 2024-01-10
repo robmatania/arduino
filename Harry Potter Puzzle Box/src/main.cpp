@@ -15,7 +15,7 @@ Date: 2023
 #include <HPPuzzleBox.h>
 
 #define NODEBUG 
-#define DEFAULT_VOLUME MED_VOLUME
+#define DEFAULT_VOLUME MAX_VOLUME
 #define SOUND_ONOFF  1 // 0 = off, 1 = on
 #define VERSION 0.1
 #define EPROM_STATE_ADDRESS 0
